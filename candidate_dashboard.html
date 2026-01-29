@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Dashboard - Credoza{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">Welcome, {{ current_user.username }}!</h1>
+            <p class="text-muted">Track your skill assessments and verifications</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('start_assessment') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Start New Assessment
+            </a>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ verifications|length }}</h3>
+                    <p class="card-text text-muted">Verified Skills</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ recent_attempts|length }}</h3>
+                    <p class="card-text text-muted">Assessments Taken</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% set passed = recent_attempts|selectattr('is_passed')|list|length %}
+                    <h3 class="card-title">{{ passed }}</h3>
+                    <p class="card-text text-muted">Passed Assessments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% set avg_score = recent_attempts|selectattr('percentage')|map(attribute='percentage')|average or 0 %}
+                    <h3 class="card-title">{{ "%.1f"|format(avg_score) }}%</h3>
+                    <p class="card-text text-muted">Average Score</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Verified Skills -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Verified Skills</h5>
+                </div>
+                <div class="card-body">
+                    {% if verifications %}
+                    <div class="row">
+                        {% for verification in verifications %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ verification.skill.name }}</h6>
+                                    <p class="card-text text-muted small">
+                                        Verified: {{ verification.verification_date.strftime('%Y-%m-%d') }}<br>
+                                        Certificate ID: {{ verification.certificate_id }}
+                                    </p>
+                                    <a href="{{ url_for('verify_skill', verification_id=verification.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        View Certificate
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No verified skills yet. Take an assessment to get certified!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Assessments -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Assessments</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_attempts %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Assessment</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in recent_attempts %}
+                                <tr>
+                                    <td>{{ attempt.assessment.title }}</td>
+                                    <td>{{ attempt.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if attempt.percentage %}
+                                        <span class="badge bg-{{ 'success' if attempt.percentage >= 70 else 'warning' if attempt.percentage >= 50 else 'danger' }}">
+                                            {{ "%.1f"|format(attempt.percentage) }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.status == 'completed' %}
+                                            {% if attempt.is_passed %}
+                                            <span class="badge bg-success">Passed</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Failed</span>
+                                            {% endif %}
+                                        {% else %}
+                                        <span class="badge bg-warning">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.status == 'completed' %}
+                                        <a href="{{ url_for('assessment_results', attempt_id=attempt.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Results
+                                        </a>
+                                        {% else %}
+                                        <a href="{{ url_for('take_assessment', attempt_id=attempt.id, question_num=1) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            Continue
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No assessments taken yet. Start your first assessment!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Available Assessments -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Assessments</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_assessments %}
+                    <div class="row">
+                        {% for assessment in available_assessments %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ assessment.title }}</h6>
+                                    <p class="card-text text-muted small">
+                                        {{ assessment.description[:100] }}...
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info">{{ assessment.duration }} min</span>
+                                        <a href="{{ url_for('start_assessment') }}" 
+                                           class="btn btn-sm btn-primary">
+                                            Start
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No assessments available at the moment.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

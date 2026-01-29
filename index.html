@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to Credoza{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Certify Your Skills with Industry-Recognized Assessments</h1>
+            <p class="lead mb-4">Take skill assessments designed by industry experts and showcase verified scores on your resume, portfolio, or LinkedIn. Trusted by recruiters worldwide.</p>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2">Get Started Free</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+            {% else %}
+            <a href="{{ url_for('candidate_dashboard' if current_user.role == 'candidate' else 'recruiter_dashboard') }}" 
+               class="btn btn-primary btn-lg">
+               Go to Dashboard
+            </a>
+            {% endif %}
+        </div>
+        <div class="col-lg-6 text-center">
+            <i class="fas fa-laptop-code display-1 text-primary"></i>
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="row mt-5 pt-5">
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="fas fa-award fa-2x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">Industry-Recognized</h4>
+                    <p class="card-text">Assessments designed by industry experts, valued by recruiters worldwide.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="fas fa-brain fa-2x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">AI Skill DNA</h4>
+                    <p class="card-text">Advanced AI provides recruiters with deep insights into candidate capabilities.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="fas fa-briefcase fa-2x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">Career Boost</h4>
+                    <p class="card-text">Stand out in job applications with verified skill credentials.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Popular Skills -->
+    {% if popular_skills %}
+    <div class="mt-5">
+        <h2 class="text-center mb-4">Popular Skills to Verify</h2>
+        <div class="row">
+            {% for skill in popular_skills %}
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <span class="skill-badge">{{ skill.category }}</span>
+                        <h5 class="card-title mt-2">{{ skill.name }}</h5>
+                        <p class="card-text">{{ skill.description or 'Test your knowledge in this skill area.' }}</p>
+                        <span class="badge bg-{{ 'success' if skill.difficulty == 'beginner' else 'warning' if skill.difficulty == 'intermediate' else 'danger' }}">
+                            {{ skill.difficulty|title }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Recruiter Dashboard - Credoza{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3">Recruiter Dashboard</h1>
+            <p class="text-muted">Verify candidate skills and access AI Skill DNA reports</p>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ verified_candidates|length }}</h3>
+                    <p class="card-text text-muted">Verified Candidates</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ all_verifications|length }}</h3>
+                    <p class="card-text text-muted">Skill Verifications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% set passed = recent_assessments|selectattr('is_passed')|list|length %}
+                    <h3 class="card-title">{{ passed }}</h3>
+                    <p class="card-text text-muted">Passed Assessments</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ recent_assessments|length }}</h3>
+                    <p class="card-text text-muted">Recent Assessments</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Assessments -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Candidate Assessments</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_assessments %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Assessment</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>AI Skill DNA</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in recent_assessments %}
+                                <tr>
+                                    <td>{{ attempt.user.username }}</td>
+                                    <td>{{ attempt.assessment.title }}</td>
+                                    <td>{{ attempt.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if attempt.percentage %}
+                                        <span class="badge bg-{{ 'success' if attempt.percentage >= 70 else 'warning' if attempt.percentage >= 50 else 'danger' }}">
+                                            {{ "%.1f"|format(attempt.percentage) }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.ai_analysis %}
+                                        <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Not Available</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.attempt.skill_verification %}
+                                        <a href="{{ url_for('verify_skill', verification_id=attempt.attempt.skill_verification.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Verification
+                                        </a>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            No Verification
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No assessments found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AI Skill DNA Information -->
+    <div class="row">
+        <div class="col">
+            <div class="card ai-dna-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="card-title text-white">AI Skill DNA Analysis</h5>
+                            <p class="text-white-80">As a recruiter, you have exclusive access to our AI Skill DNA reports. These reports provide deep insights into candidate capabilities, including:</p>
+                            <ul class="text-white-80">
+                                <li>Detailed skill breakdown across multiple dimensions</li>
+                                <li>Analysis of problem-solving approaches and patterns</li>
+                                <li>Identification of strengths and improvement areas</li>
+                                <li>Time management and consistency analysis</li>
+                                <li>Performance predictions for different roles</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-dna display-1 text-white"></i>
+                            <p class="text-white mt-2">Exclusive Recruiter Feature</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
